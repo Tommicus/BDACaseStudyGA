@@ -17,6 +17,7 @@ jesus.martin.calvo@gmail.com
  In addition to that, this case addresses some of the most fundamental issues in Data Analysis and Visualization: getting data from a source, clean, summarize and visualize. 
  
  The sample data is downloaded from the GA account of the Spanish blog www.encortosabemejor.com and its analysis will help us to understand how the content is consumed by users. Some decisions that will have to be made with this information is to decide on what to write in the future, 
+
  
 ## Data Description
  
@@ -24,6 +25,7 @@ First, let's take a look at the first 1000 rows of data
 
 ```{r, echo=FALSE, message=FALSE, prompt=FALSE, results='asis'}
 t1 <- gvisTable(gadata[1:1000,],options = list(showRowNumber = FALSE, width = 800, height = min(400,27*(nrow(gadata) + 1)), allowHTML = TRUE, page = 'disable'))
+
 print(t1,'chart')
 ```
 
@@ -75,10 +77,256 @@ In this case study, you will have to answer five questions which will help the w
 
 1. What are the pages with more visits? Are them the same when medium is not 'cpc'? Can you make a recommendation on the most popular pages?
 
-2. What are the exit rates for the pages with the most number of exits? How would you change the content of the page to reduce exit rate? 
+## *Answer 1*
 
-3. What are the pages with the highest average time on page? Would you recommend the author to write more on these topics?
+First, let's see the column chart of entrances as Y-axis and pagePath as X-axis.
 
-3. What combinations of sources and mediums attract the more amount of new visitors? Is their exit rate different to the existing visitors?
+```{r, echo=FALSE, message=FALSE, prompt=FALSE, results='asis'}
+entrppage <-  group_by(gadata, pagePath) %>% summarise(entrances = sum(entrances))
+ggplot(entrppage,aes(x = pagePath, y = entrances)) + geom_bar(stat="identity", fill = "lightblue", colour = "black")
+  
+```
 
-4. When medium is referral, which are the sources that attracted the highest number of pageviews? Based on this, should the author promote the content in any of these websites? Would it be better to invest in visitors coming from the medium 'cpc'?
+We see that there are six pagePaths with more than 100 entrances. Let's select only these columns and view the data in descending order
+
+```{r, echo=FALSE, message=FALSE, prompt=FALSE, results='asis'}
+pages1 <- group_by(gadata, pagePath) %>% summarise(entrances = sum(entrances))
+
+pages2 <- subset(pages1, entrances > 100)
+pages3 <- arrange(pages2, -entrances)
+
+
+t2 <- gvisTable(pages3[1:6,],options = list(showRowNumber = FALSE, width = 800, height = min(400,27*(nrow(gadata) + 1)), allowHTML = TRUE, page = 'disable'))
+print(t2,'chart')
+
+```
+
+Note that only four pages have over 400 visits, out which one is 404-error page and one is the home page. The most popular pages have content regarding PHP and free software.
+
+In order to let's understand which pages are visited via non-paid channels we will look at the most visited pages excluding lead by "cpc" medium
+
+```{r, echo=FALSE, message=FALSE, prompt=FALSE, results='asis'}
+pagesEXcpc <- gadata[ which(gadata$Medium!='cpc'), ]
+
+entrppage <-  group_by(pagesEXcpc, pagePath) %>% summarise(entrances = sum(entrances))
+ggplot(entrppage,aes(x = pagePath, y = entrances)) + geom_bar(stat="identity", fill = "lightblue", colour = "black")
+  
+```
+
+We see that there are four pagePaths with more than 100 entrances. Let's select only these columns and view the data in descending order
+
+```{r, echo=FALSE, message=FALSE, prompt=FALSE, results='asis'}
+pages1 <- group_by(pagesEXcpc, pagePath) %>% summarise(entrances = sum(entrances))
+
+pages2 <- subset(pages1, entrances > 100)
+pages3 <- arrange(pages2, -entrances)
+
+
+t2 <- gvisTable(pages3[1:4,],options = list(showRowNumber = FALSE, width = 800, height = min(400,27*(nrow(gadata) + 1)), allowHTML = TRUE, page = 'disable'))
+print(t2,'chart')
+
+```
+
+In this subset the top visited pages do not include 404-error page and Free Software page. 
+<bc>
+After this analysis we can cay that the most popular pages are the PHP page, the home page and the free software page. This means that the editors should focus on these content topics in order to ensure growth of traffic to the website. This also means that there should be more content related to these topics on the home page to generate additional user engagement.
+<bc>
+We see many case where a 404-error page is visited via "cpc" medium. This indicates a "red flag" for online advertising of the website. Website owners are paying for lead generation to an empty page hence not bringing any additional traffic on these expenses. Website owners can use this data to make the online ad campaign more effective.
+
+<bc>
+
+2 What are the exit rates for the pages with the most number of exits? How would you change the content of the page to reduce exit rate? 
+
+## *Answer 2*
+
+Let's find the pages with the most number of exits
+
+```{r, echo=FALSE, message=FALSE, prompt=FALSE, results='asis'}
+entrppage <-  group_by(gadata, pagePath) %>% summarise(exits = sum(exits))
+ggplot(entrppage,aes(x = pagePath, y = exits)) + geom_bar(stat="identity", fill = "lightblue", colour = "black")
+  
+```
+
+We see that there are 6 pagePaths with more than 100 cumulative exits. Let's select only these columns and view the data in descending order
+
+```{r, echo=FALSE, message=FALSE, prompt=FALSE, results='asis'}
+pages4 <- group_by(gadata, pagePath) %>% summarise(exits = sum(exits))
+
+pages5 <- subset(pages4, exits > 100)
+pages6 <- arrange(pages5, -exits)
+
+
+t2 <- gvisTable(pages6[1:6,],options = list(showRowNumber = FALSE, width = 800, height = min(400,27*(nrow(gadata) + 1)), allowHTML = TRUE, page = 'disable'))
+print(t2,'chart')
+
+```
+
+In order to calculate the Exit rate = # of Exits / # of pageviews we need to create a set which includes the abovementioned pagepaths and their respective cumulative pageviews and exits
+
+#pages7 <- group_by(gadata, pagePath) %>% summarise(exits = sum(exits), pageviews = sum(pageviews))
+
+```{r, echo=FALSE, message=FALSE, prompt=FALSE, results='asis'}
+pages7 <- group_by(gadata, pagePath) %>% summarise(exits = sum(exits), pageviews = sum(pageviews))
+pages7$exitrate <- pages7$exits / pages7$pageviews
+```
+
+We can now calculate the exit rate
+
+```{r, echo=FALSE, message=FALSE, prompt=FALSE, results='asis'}
+
+pages8 <- subset(pages7, exits > 100)
+pages9 <- arrange(pages8, -exits)
+
+
+t2 <- gvisTable(pages9[1:6,],options = list(showRowNumber = FALSE, width = 800, height = min(400,27*(nrow(gadata) + 1)), allowHTML = TRUE, page = 'disable'))
+print(t2,'chart')
+
+```
+
+The pages with the highest exit rates include: 404-error, free software and two-sim card pages.
+
+In order to decrease exit rates the editors could do the following:
+
+-improve quality of free software content adjusting this to customers tastes (using surveys or online research on this topic).It is obvious that free software generates user engagement (high number of visits), but the quality of the content may be poor which leads to high exit rates.
+-include PHP-related topics in the free software page as this content generates a lower exit rate
+-if the exits are driven by customer's intentions for new content on this topic, which they cannot find on the free software page then authors must include additional information on this topic in order not to lose traffic to other resources
+-improve website operational capabilities so that 404-error pages do not appear that often and implement automatic redirection to popular pages (ex. PHP).
+
+
+3 What are the pages with the highest average time on page? Would you recommend the author to write more on these topics?
+
+## *Answer 3*
+
+
+
+We need to calculate and sort the pages according to the average time on page = timeOnPage/(pageviews-exits) 
+
+#pages10 <- group_by(gadata, pagePath) %>% summarise(timeOnPage = sum(timeOnPage), exits = sum(exits), pageviews = sum(pageviews))
+
+```{r, echo=FALSE, message=FALSE, prompt=FALSE, results='asis'}
+pages10 <- group_by(gadata, pagePath) %>% summarise(timeOnPage = sum(timeOnPage), exits = sum(exits), pageviews = sum(pageviews))
+pages10$avgToP <- round((pages10$timeOnPage) / (pages10$pageviews - pages10$exits), 0) 
+```
+
+We can now calculate the average time on page for relevant pages (with cumulative pageviews over 100)
+
+```{r, echo=FALSE, message=FALSE, prompt=FALSE, results='asis'}
+
+pages11 <- subset(pages10, pageviews > 100)
+pages12 <- arrange(pages11, -pageviews)
+
+
+t2 <- gvisTable(pages12[1:6,],options = list(showRowNumber = FALSE, width = 800, height = min(400,27*(nrow(gadata) + 1)), allowHTML = TRUE, page = 'disable'))
+print(t2,'chart')
+
+```
+
+We see that the pages highest average time on page include sim-card and game theory pages. For the popular pages (PHP and home page) the average time on page is lower. I would recommend authors to focus more on popular pages and provide the content that improves customer engagement. This way the average time on page for the popular pages will increase and the website would be able to potentially monetize more from these pages (throug ads, leads)
+
+
+4 What combinations of sources and mediums attract the more amount of new visitors? Is their exit rate different to the existing visitors?
+
+## *Answer 4*
+
+Lets create a subset of data contaning information only for new visitors (excluding returning visitors) and see which sources attract great quantities of new visitors
+
+```{r, echo=FALSE, message=FALSE, prompt=FALSE, results='asis'}
+pagesNV <- gadata[ which(gadata$userType =='New Visitor'), ]
+
+entrppage <-  group_by(pagesNV, source) %>% summarise(entrances = sum(entrances))
+ggplot(entrppage,aes(x = source, y = entrances)) + geom_bar(stat="identity", fill = "lightblue", colour = "black")
+  
+```
+
+```{r, echo=FALSE, message=FALSE, prompt=FALSE, results='asis'}
+pagesNV <- gadata[ which(gadata$userType =='New Visitor'), ]
+
+pages13 <- group_by(pagesNV, source) %>% summarise(entrances = sum(entrances))
+pages14 <- subset(pages13, entrances > 100)
+```
+
+```{r, echo=FALSE, message=FALSE, prompt=FALSE, results='asis'}
+
+t2 <- gvisTable(pages14[1:3,],options = list(showRowNumber = FALSE, width = 800, height = min(400,27*(nrow(gadata) + 1)), allowHTML = TRUE, page = 'disable'))
+print(t2,'chart')
+
+```
+
+Google generates more amount of new visitors by far
+
+Let's see which media attract great quantities of new visitors
+
+```{r, echo=FALSE, message=FALSE, prompt=FALSE, results='asis'}
+pagesNV <- gadata[ which(gadata$userType =='New Visitor'), ]
+
+entrppage <-  group_by(pagesNV, Medium) %>% summarise(entrances = sum(entrances))
+ggplot(entrppage,aes(x = Medium, y = entrances)) + geom_bar(stat="identity", fill = "lightblue", colour = "black")
+  
+```
+
+CPC and organic leads from Google account for most of new visitors by far
+
+We can say that organic and CPC medium are effective in terms of generating new traffic to the website
+
+Now lets create a subset of data contaning information only for returning visitors and see which sources attract great quantities of returning visitors
+
+```{r, echo=FALSE, message=FALSE, prompt=FALSE, results='asis'}
+pagesRV <- gadata[ which(gadata$userType =='Returning Visitor'), ]
+
+entrppage <-  group_by(pagesRV, source) %>% summarise(entrances = sum(entrances))
+ggplot(entrppage,aes(x = source, y = entrances)) + geom_bar(stat="identity", fill = "lightblue", colour = "black")
+  
+```
+
+```{r, echo=FALSE, message=FALSE, prompt=FALSE, results='asis'}
+pagesRV <- gadata[ which(gadata$userType =='Returning Visitor'), ]
+
+pages15 <- group_by(pagesRV, source) %>% summarise(entrances = sum(entrances))
+pages16 <- subset(pages15, entrances > 25)
+```
+
+```{r, echo=FALSE, message=FALSE, prompt=FALSE, results='asis'}
+
+t2 <- gvisTable(pages16[1:4,],options = list(showRowNumber = FALSE, width = 800, height = min(400,27*(nrow(gadata) + 1)), allowHTML = TRUE, page = 'disable'))
+print(t2,'chart')
+
+```
+
+Google generates more amount of returning visitors as well (followed by direct)
+
+Let's see which media attract great quantities of returning visitors
+
+```{r, echo=FALSE, message=FALSE, prompt=FALSE, results='asis'}
+pagesRV <- gadata[ which(gadata$userType =='Returning Visitor'), ]
+
+entrppage <-  group_by(pagesRV, Medium) %>% summarise(entrances = sum(entrances))
+ggplot(entrppage,aes(x = Medium, y = entrances)) + geom_bar(stat="identity", fill = "lightblue", colour = "black")
+  
+```
+
+Referral, CPC and organic leads account for most of returning visitors 
+
+We can say that it is rather innefficient to spend money to attract returning customers through "cpc". This may be done via less expensive methods (ex. e-mail, targetted referrals etc)
+
+Now let's calculate the exit rate for New Visitors and Returning Visitors
+
+```{r, echo=FALSE, message=FALSE, prompt=FALSE, results='asis'}
+
+pages17 <- group_by(gadata, userType) %>% summarise(exits = sum(exits), pageviews = sum(pageviews))
+pages17$exitrate <- pages17$exits / pages17$pageviews
+
+```
+
+```{r, echo=FALSE, message=FALSE, prompt=FALSE, results='asis'}
+
+t2 <- gvisTable(pages17[1:2,],options = list(showRowNumber = FALSE, width = 800, height = min(400,27*(nrow(gadata) + 1)), allowHTML = TRUE, page = 'disable'))
+print(t2,'chart')
+
+```
+
+The exit rate of new visitors is slightly higher than the exit rate of recurring visitors. Websute owners should improve content of the websites in order to retain new visitors and decrease their exit rates
+
+
+
+
+5 When medium is referral, which are the sources that attracted the highest number of pageviews? Based on this, should the author promote the content in any of these websites? Would it be better to invest in visitors coming from the medium 'cpc'?
