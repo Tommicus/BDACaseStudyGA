@@ -76,6 +76,8 @@ end.date  <-  "{End date of the data}"
 
 source(paste(local_directory,"R/GAQuery.R", sep="/"))
 
+
+
 # CONTINUE HERE
 # If you do not have access to GA, load the csv in the "data" folder into the variable gadata
 if (!exists("gadata")) 

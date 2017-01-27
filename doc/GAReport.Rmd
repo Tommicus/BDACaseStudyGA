@@ -221,7 +221,7 @@ print(t2,'chart')
 
 ```
 
-We see that the pages highest average time on page include sim-card and game theory pages. For the popular pages (PHP and home page) the average time on page is lower. I would recommend authors to focus more on popular pages and provide the content that improves customer engagement. This way the average time on page for the popular pages will increase and the website would be able to potentially monetize more from these pages (throug ads, leads)
+We see that the pages highest average time on page include sim-card and game theory pages. For the popular pages (PHP and home page) the average time on page is lower. I would recommend authors to focus more on popular pages and provide the content that improves customer engagement. This way the average time on page for the popular pages will increase and the website would be able to potentially monetize more from these pages (through ads, leads)
 
 
 4 What combinations of sources and mediums attract the more amount of new visitors? Is their exit rate different to the existing visitors?
@@ -252,7 +252,7 @@ print(t2,'chart')
 
 ```
 
-Google generates more amount of new visitors by far
+Google generates the biggest amount of new visitors by far
 
 Let's see which media attract great quantities of new visitors
 
@@ -266,7 +266,7 @@ ggplot(entrppage,aes(x = Medium, y = entrances)) + geom_bar(stat="identity", fil
 
 CPC and organic leads from Google account for most of new visitors by far
 
-We can say that organic and CPC medium are effective in terms of generating new traffic to the website
+We can say that organic and CPC media are effective in terms of generating new traffic to the website
 
 Now lets create a subset of data contaning information only for returning visitors and see which sources attract great quantities of returning visitors
 
@@ -292,7 +292,7 @@ print(t2,'chart')
 
 ```
 
-Google generates more amount of returning visitors as well (followed by direct)
+Google generates a greater amount of returning visitors as well (followed by direct)
 
 Let's see which media attract great quantities of returning visitors
 
@@ -324,9 +324,48 @@ print(t2,'chart')
 
 ```
 
-The exit rate of new visitors is slightly higher than the exit rate of recurring visitors. Websute owners should improve content of the websites in order to retain new visitors and decrease their exit rates
+The exit rate of new visitors is slightly higher than the exit rate of recurring visitors. Website owners should improve content of the websites by attend to customer needs in order to retain new visitors and decrease their exit rates.
 
 
 
 
 5 When medium is referral, which are the sources that attracted the highest number of pageviews? Based on this, should the author promote the content in any of these websites? Would it be better to invest in visitors coming from the medium 'cpc'?
+
+## *Answer 5*
+
+Let's see which sources attract the highest number of page views when medium is referral
+
+```{r, echo=FALSE, message=FALSE, prompt=FALSE, results='asis'}
+pagesREF <- gadata[ which(gadata$Medium =='referral'), ]
+
+entrppage <-  group_by(pagesREF, source) %>% summarise(pageviews = sum(pageviews))
+ggplot(entrppage,aes(x = source, y = pageviews)) + geom_bar(stat="identity", fill = "lightblue", colour = "black")
+  
+```
+
+We see that there are 4 sources with more than 100 cumulative pageviews. Let's select only these columns and view the data in descending order
+
+```{r, echo=FALSE, message=FALSE, prompt=FALSE, results='asis'}
+pagesREF <- gadata[ which(gadata$Medium =='referral'), ]
+
+pages19 <-  group_by(pagesREF, source) %>% summarise(pageviews = sum(pageviews))
+
+pages20 <- subset(pages19, pageviews > 100)
+pages21 <- arrange(pages20, -pageviews)
+
+
+t2 <- gvisTable(pages21[1:4,],options = list(showRowNumber = FALSE, width = 800, height = min(400,27*(nrow(gadata) + 1)), allowHTML = TRUE, page = 'disable'))
+print(t2,'chart')
+
+```
+
+A big part of referrals come fromm semalt.semalt.com which is a technical bot and is not a quality targeted traffic. This floods the statistics with spam visits with 100% bounce rate. Website owners should avoid this referral source by setting properly the website settings (especially if these are paid referrals). 
+
+The author of the website should not promote any content on websites which are operated by technical bots.
+
+Facebook and Linked In are #2 and #3 sources in the referral media which indicates the potential attractiveness of these sources. Authors should consider promoting popular and quality content through Facebook and LinkedIn and thus potentially increase the traffic to their website.
+
+In order to improve customer traffic authors in a cost-efficient manner authors should use a mix of CPC and referall promotions. CPC is currently by far the biggest source of traffic so this channel should be looked at carefully to ensure efficient cost structure and exclude leads to 404-error pages.
+
+Also the website should attend to customer needs by improving free software content and introducing more PHP-related content. This way the website would generate more organic and direct traffic.
+
